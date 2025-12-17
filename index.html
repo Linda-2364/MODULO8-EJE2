@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contador interactivo con JavaScript - Ejercicio práctico">
+    <title>Contador Interactivo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* =====================================
+           RESET Y VARIABLES
+           ===================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Nuevos colores más vibrantes */
+            --color-primary: #6a11cb;
+            --color-secondary: #2575fc;
+            --color-positive: #00b09b;
+            --color-negative: #ff416c;
+            --color-neutral: #8e9eab;
+            --color-dark: #1a1a2e;
+            --color-light: #f8f9fa;
+            
+            /* Gradientes */
+            --gradient-primary: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            --gradient-positive: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+            --gradient-negative: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            --gradient-neutral: linear-gradient(135deg, #8e9eab 0%, #eef2f3 100%);
+            --gradient-dark: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --gradient-bg: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+            
+            /* Sombras */
+            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.3);
+            --shadow-glow: 0 0 20px rgba(106, 17, 203, 0.5);
+            
+            /* Espaciado */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2.5rem;
+            --spacing-xl: 4rem;
+            
+            /* Transiciones */
+            --transition-fast: all 0.2s ease;
+            --transition-normal: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --transition-slow: all 0.5s ease;
+            
+            /* Bordes redondeados */
+            --radius-sm: 12px;
+            --radius-md: 18px;
+            --radius-lg: 25px;
+            --radius-circle: 50%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--gradient-bg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: var(--spacing-md);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Efecto de partículas en el fondo */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(106, 17, 203, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(37, 117, 252, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* =====================================
+           CONTENEDOR PRINCIPAL
+           ===================================== */
+        .container {
+            background: rgba(30, 30, 46, 0.85);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--gradient-primary);
+            z-index: 2;
+        }
+
+        .titulo {
+            font-size: 2.8rem;
+            color: white;
+            margin-bottom: var(--spacing-lg);
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            display: inline-block;
+        }
+
+        .titulo::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
+        }
+
+        /* =====================================
+           DISPLAY DEL CONTADOR
+           ===================================== */
+        .contador-display {
+            background: var(--gradient-dark);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-lg);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 
+                inset 0 4px 20px rgba(0, 0, 0, 0.4),
+                0 8px 30px rgba(0, 0, 0, 0.3);
+            transition: var(--transition-normal);
+        }
+
+        .contador-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.03) 50%, transparent 70%);
+            z-index: 1;
+        }
+
+        .numero {
+            font-size: 6rem;
+            font-weight: 800;
+            color: white;
+            display: block;
+            transition: var(--transition-normal);
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            font-family: 'Arial Black', 'Segoe UI', sans-serif;
+            letter-spacing: 2px;
+        }
+
+        /* Estados del número */
+        .numero.positivo {
+            color: #00b09b;
+            text-shadow: 0 4px 20px rgba(0, 176, 155, 0.4);
+        }
+
+        .numero.negativo {
+            color: #ff416c;
+            text-shadow: 0 4px 20px rgba(255, 65, 108, 0.4);
+        }
+
+        .numero.neutro {
+            color: #8e9eab;
+            text-shadow: 0 4px 20px rgba(142, 158, 171, 0.4);
+        }
+
+        /* Cambio de fondo según estado */
+        .contador-display.bg-positivo {
+            background: linear-gradient(135deg, #1a2a3a 0%, #0a3a2a 100%);
+            box-shadow: 
+                inset 0 4px 20px rgba(0, 0, 0, 0.4),
+                0 8px 30px rgba(0, 176, 155, 0.2);
+        }
+
+        .contador-display.bg-negativo {
+            background: linear-gradient(135deg, #1a2a3a 0%, #3a0a1a 100%);
+            box-shadow: 
+                inset 0 4px 20px rgba(0, 0, 0, 0.4),
+                0 8px 30px rgba(255, 65, 108, 0.2);
+        }
+
+        .contador-display.bg-neutro {
+            background: var(--gradient-dark);
+        }
+
+        /* =====================================
+           BOTONES PRINCIPALES
+           ===================================== */
+        .botones {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 130px;
+            padding: 18px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: var(--transition-normal);
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            opacity: 1;
+        }
+
+        .btn .icono {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .btn-success {
+            background: var(--gradient-positive);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 176, 155, 0.4);
+        }
+
+        .btn-danger {
+            background: var(--gradient-negative);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(255, 65, 108, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #8e9eab 0%, #647d8b 100%);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(142, 158, 171, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* =====================================
+           BOTONES BONUS
+           ===================================== */
+        .botones-bonus {
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .btn-small {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            box-shadow: var(--shadow-sm);
+            flex: 1;
+            max-width: 120px;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-3px);
+        }
+
+        .btn-success-light {
+            background: var(--gradient-positive);
+        }
+
+        .btn-success-light:hover {
+            box-shadow: 0 8px 20px rgba(0, 176, 155, 0.4);
+        }
+
+        .btn-danger-light {
+            background: var(--gradient-negative);
+        }
+
+        .btn-danger-light:hover {
+            box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
+        }
+
+        /* =====================================
+           NUEVOS BOTONES EXTRA (+10, -10, +2, -2)
+           ===================================== */
+        .botones-extra {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .btn-extra {
+            padding: 14px 10px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            box-shadow: var(--shadow-sm);
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-extra:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(106, 17, 203, 0.4);
+        }
+
+        .btn-extra:active {
+            transform: translateY(0);
+        }
+
+        .btn-extra .valor {
+            font-size: 1.5rem;
+        }
+
+        .btn-extra .texto {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        /* =====================================
+           INFORMACIÓN
+           ===================================== */
+        .info {
+            padding: var(--spacing-md);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm);
+            border-left: 4px solid #6a11cb;
+            margin-top: var(--spacing-md);
+            backdrop-filter: blur(5px);
+            transition: var(--transition-normal);
+        }
+
+        .info:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+        }
+
+        .info p {
+            color: #e0e0e0;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .info strong {
+            color: white;
+            font-weight: 700;
+        }
+
+        /* =====================================
+           ANIMACIONES
+           ===================================== */
+        @keyframes pulso {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .numero.positivo, .numero.negativo {
+            animation: pulso 0.4s ease;
+        }
+
+        /* =====================================
+           RESPONSIVE
+           ===================================== */
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+            }
+            
+            .titulo {
+                font-size: 2.2rem;
+            }
+            
+            .numero {
+                font-size: 4.5rem;
+            }
+            
+            .botones {
+                flex-direction: column;
+            }
+            
+            .btn {
+                min-width: 100%;
+            }
+            
+            .botones-extra {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .botones-bonus {
+                flex-wrap: wrap;
+            }
+            
+            .btn-small {
+                min-width: 45%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .titulo {
+                font-size: 1.8rem;
+            }
+            
+            .numero {
+                font-size: 3.5rem;
+            }
+            
+            .botones-extra {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Título -->
+        <h1 class="titulo">Contador Interactivo</h1>
+        
+        <!-- Display del contador -->
+        <div class="contador-display">
+            <span id="contador" class="numero">0</span>
+        </div>
+        
+        <!-- Botones de control principales -->
+        <div class="botones">
+            <button id="btnDecrementar" class="btn btn-danger">
+                <span class="icono">-</span>
+                <span>Decrementar</span>
+            </button>
+            
+            <button id="btnResetear" class="btn btn-secondary">
+                <span class="icono">↻</span>
+                <span>Resetear</span>
+            </button>
+            
+            <button id="btnIncrementar" class="btn btn-success">
+                <span class="icono">+</span>
+                <span>Incrementar</span>
+            </button>
+        </div>
+        
+        <!-- Nuevos botones extra (+10, -10, +2, -2) -->
+        <div class="botones-extra">
+            <button id="btnDecrementar10" class="btn-extra">
+                <span class="valor">-10</span>
+                <span class="texto">Decrementar 10</span>
+            </button>
+            <button id="btnDecrementar2" class="btn-extra">
+                <span class="valor">-2</span>
+                <span class="texto">Decrementar 2</span>
+            </button>
+            <button id="btnIncrementar2" class="btn-extra">
+                <span class="valor">+2</span>
+                <span class="texto">Incrementar 2</span>
+            </button>
+            <button id="btnIncrementar10" class="btn-extra">
+                <span class="valor">+10</span>
+                <span class="texto">Incrementar 10</span>
+            </button>
+        </div>
+        
+        <!-- Botones Bonus -->
+        <div class="botones-bonus">
+            <button id="btnDecrementar5" class="btn-small btn-danger-light">-5</button>
+            <button id="btnIncrementar5" class="btn-small btn-success-light">+5</button>
+        </div>
+        
+        <!-- Información -->
+        <div class="info">
+            <p id="mensaje">El contador está en <strong>cero</strong></p>
+        </div>
+    </div>
+    
+    <script>
+        // ===== SELECCIÓN DE ELEMENTOS =====
+        const contadorElement = document.getElementById("contador");
+        const btnIncrementar = document.getElementById("btnIncrementar");
+        const btnDecrementar = document.getElementById("btnDecrementar");
+        const btnResetear = document.getElementById("btnResetear");
+        const btnIncrementar5 = document.getElementById("btnIncrementar5");
+        const btnDecrementar5 = document.getElementById("btnDecrementar5");
+        const btnIncrementar10 = document.getElementById("btnIncrementar10");
+        const btnDecrementar10 = document.getElementById("btnDecrementar10");
+        const btnIncrementar2 = document.getElementById("btnIncrementar2");
+        const btnDecrementar2 = document.getElementById("btnDecrementar2");
+        const mensajeElement = document.getElementById("mensaje");
+        const displayContador = document.querySelector(".contador-display");
+
+        // ===== VARIABLE DEL CONTADOR =====
+        let contador = parseInt(localStorage.getItem("contador")) || 0;
+
+        // ===== FUNCIONES =====
+        function actualizarDisplay() {
+            contadorElement.textContent = contador;
+            
+            contadorElement.classList.remove("positivo", "negativo", "neutro");
+            displayContador.classList.remove("bg-positivo", "bg-negativo", "bg-neutro");
+
+            if (contador > 0) {
+                contadorElement.classList.add("positivo");
+                displayContador.classList.add("bg-positivo");
+                actualizarMensaje("positivo");
+            } else if (contador < 0) {
+                contadorElement.classList.add("negativo");
+                displayContador.classList.add("bg-negativo");
+                actualizarMensaje("negativo");
+            } else {
+                contadorElement.classList.add("neutro");
+                displayContador.classList.add("bg-neutro");
+                actualizarMensaje("neutro");
+            }
+
+            localStorage.setItem("contador", contador);
+        }
+
+        function actualizarMensaje(estado) {
+            let mensaje = "";
+
+            switch (estado) {
+                case "positivo":
+                    mensaje = `El contador está en <strong>positivo</strong> (+${contador})`;
+                    break;
+                case "negativo":
+                    mensaje = `El contador está en <strong>negativo</strong> (${contador})`;
+                    break;
+                case "neutro":
+                    mensaje = "El contador está en <strong>cero</strong>";
+                    break;
+            }
+
+            mensajeElement.innerHTML = mensaje;
+        }
+
+        function incrementar(cantidad = 1) {
+            contador += cantidad;
+            actualizarDisplay();
+        }
+
+        function decrementar(cantidad = 1) {
+            contador -= cantidad;
+            actualizarDisplay();
+        }
+
+        function resetear() {
+            contador = 0;
+            actualizarDisplay();
+        }
+
+        // ===== EVENT LISTENERS =====
+        btnIncrementar.addEventListener("click", () => incrementar(1));
+        btnDecrementar.addEventListener("click", () => decrementar(1));
+        btnResetear.addEventListener("click", resetear);
+        btnIncrementar5.addEventListener("click", () => incrementar(5));
+        btnDecrementar5.addEventListener("click", () => decrementar(5));
+        btnIncrementar10.addEventListener("click", () => incrementar(10));
+        btnDecrementar10.addEventListener("click", () => decrementar(10));
+        btnIncrementar2.addEventListener("click", () => incrementar(2));
+        btnDecrementar2.addEventListener("click", () => decrementar(2));
+
+        // BONUS: Atajos de teclado
+        document.addEventListener("keydown", (e) => {
+            switch (e.key) {
+                case "ArrowUp":
+                    incrementar(1);
+                    break;
+                case "ArrowDown":
+                    decrementar(1);
+                    break;
+                case "r":
+                case "R":
+                    resetear();
+                    break;
+                case "+":
+                    if (e.shiftKey) incrementar(10);
+                    else incrementar(5);
+                    break;
+                case "-":
+                    if (e.shiftKey) decrementar(10);
+                    else decrementar(5);
+                    break;
+                case "2":
+                    if (e.shiftKey) incrementar(2);
+                    break;
+                case "1":
+                    if (e.shiftKey) incrementar(10);
+                    break;
+            }
+        });
+
+        // ===== INICIALIZACIÓN =====
+        actualizarDisplay();
+
+        console.log("🎮 Contador Interactivo mejorado iniciado");
+        console.log("💡 Atajos de teclado:");
+        console.log("  ↑ : +1");
+        console.log("  ↓ : -1");
+        console.log("  R : Resetear");
+        console.log("  + : +5");
+        console.log("  Shift + + : +10");
+        console.log("  - : -5");
+        console.log("  Shift + - : -10");
+        console.log("  Shift + 2 : +2");
+        console.log("  Shift + 1 : +10");
+    </script>
+</body>
+</html>
